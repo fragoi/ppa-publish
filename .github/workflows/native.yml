@@ -23,8 +23,7 @@ jobs:
 
       - name: Download source
         run: |
-          downloadTag fragoi/${PACKAGE} v${VERSION} \
-            ${PACKAGE}_${VERSION}.tar.gz
+          downloadTag fragoi/${PACKAGE} v${VERSION}
 
       - name: Build source package
         uses: fragoi/debuild-action@main
