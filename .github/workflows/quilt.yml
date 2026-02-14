@@ -1,0 +1,47 @@
+name: Publish package (quilt)
+
+on:
+  repository_dispatch:
+    types:
+      - quilt
+
+run-name: >
+  ${{ github.event.client_payload.package }}
+  (${{ github.event.client_payload.version }})
+
+env:
+  PPA: ppa:fragoi/test
+  PACKAGE: ${{ github.event.client_payload.package }}
+  VERSION: ${{ github.event.client_payload.version }}
+
+jobs:
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: fragoi/bash-actions@v2
+
+      - name: Download upstream source
+        run: |
+          upver=$(debUpver $VERSION)
+          downloadTag fragoi/${PACKAGE} v${upver} \
+            ${PACKAGE}_${upver}.orig.tar.gz
+
+      - name: Download packaging info
+        run: |
+          downloadTag fragoi/${PACKAGE}-deb v${VERSION} \
+            ${PACKAGE}_${VERSION}.debian.tar.gz
+
+      - name: Build source package
+        uses: fragoi/debuild-action@main
+        with:
+          ppa: ${{ env.PPA }}
+
+      - name: Upload source package
+        uses: fragoi/debsign-action@main
+        with:
+          ppa: ${{ env.PPA }}
+          gpg_key: ${{ secrets.GPG_KEY }}
+          gpg_pass: ${{ secrets.GPG_PASS }}
+          ssh_key: ${{ secrets.SSH_KEY }}
+          ssh_pass: ${{ secrets.SSH_PASS }}

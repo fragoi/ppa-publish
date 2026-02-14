@@ -1,0 +1,41 @@
+name: Publish package (native)
+
+on:
+  repository_dispatch:
+    types:
+      - native
+
+run-name: >
+  ${{ github.event.client_payload.package }}
+  (${{ github.event.client_payload.version }})
+
+env:
+  PPA: ppa:fragoi/test
+  PACKAGE: ${{ github.event.client_payload.package }}
+  VERSION: ${{ github.event.client_payload.version }}
+
+jobs:
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: fragoi/bash-actions@v2
+
+      - name: Download source
+        run: |
+          downloadTag fragoi/${PACKAGE} v${VERSION} \
+            ${PACKAGE}_${VERSION}.tar.gz
+
+      - name: Build source package
+        uses: fragoi/debuild-action@main
+        with:
+          ppa: ${{ env.PPA }}
+
+      - name: Upload source package
+        uses: fragoi/debsign-action@main
+        with:
+          ppa: ${{ env.PPA }}
+          gpg_key: ${{ secrets.GPG_KEY }}
+          gpg_pass: ${{ secrets.GPG_PASS }}
+          ssh_key: ${{ secrets.SSH_KEY }}
+          ssh_pass: ${{ secrets.SSH_PASS }}
