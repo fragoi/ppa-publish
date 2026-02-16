@@ -8,11 +8,14 @@ on:
 run-name: >
   ${{ github.event.client_payload.package }}
   (${{ github.event.client_payload.version }})
+  ${{ github.event.client_payload.dist }}
 
 env:
   PPA: ppa:fragoi/test
   PACKAGE: ${{ github.event.client_payload.package }}
   VERSION: ${{ github.event.client_payload.version }}
+  DIST: ${{ github.event.client_payload.dist }}
+  DISTREV: ${{ github.event.client_payload.distrev }}
 
 jobs:
 
@@ -31,6 +34,12 @@ jobs:
         run: |
           downloadTag fragoi/${PACKAGE}-deb v${VERSION} \
             ${PACKAGE}_${VERSION}.debian.tar.gz
+
+      - name: Set distribution
+        uses: fragoi/debdist-action@main
+        with:
+          dist: ${{ env.DIST }}
+          distrev: ${{ env.DISTREV }}
 
       - name: Build source package
         uses: fragoi/debuild-action@main
